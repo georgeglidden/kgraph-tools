@@ -75,7 +75,7 @@ class ColoredDigraph:
         :param v: the vertex label, defaults to V if undefined.
         """
         if (v==None):
-            v = self.V()
+            v = max(self.vertices()) + 1
         for color in self.colors():
             self._adj[color][v] = []
         self._vertices.append(v)
@@ -107,8 +107,10 @@ class ColoredDigraph:
         :param color: an integer or an iterable of integers, giving the
         color(s) on which to restrict edges. defaults to None; consider all
         edges regardless of color
+        :param symmetric: if True, outgoing and incoming edge sets are merged.
         :return: a tuple (r(s^{-1}), s(r^{-1}) of vertices connected to `v` by,
-        respectively, outgoing and incoming `color` edges.
+        respectively, outgoing and incoming `color` edges. if the `symmetric`
+        flag is True, a single list of vertices is returned.
         """
         if (color == None):
             color = self.colors()
@@ -182,6 +184,8 @@ class ColoredDigraph:
             for w in adj_out:
                 self.del_edge(v,w,color)
             for x in adj_in:
+                if (x == v):
+                    continue
                 self.del_edge(x,v,color)
             del self._adj[color][v]
         i = self._vertices.index(v)
