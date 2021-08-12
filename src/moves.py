@@ -6,8 +6,7 @@ class Move:
     """
     def __init__(self, skeleton):
         """
-        :param skeleton: a directed graph admitting a k-partition of its edges;
-        see `kgraph.py`.
+        :param skeleton: a ColoredDigraph object.
         """
         self.graph = skeleton
         self.viable = self._check()
@@ -325,12 +324,12 @@ class Outsplit(K1Move):
         # add two new vertices
         v1 = self.graph.add_vertex()
         v2 = self.graph.add_vertex()
-        # add new outgoing edges - duplicate old outgoing edges between v1,v2.
+        # add new incoming edges - duplicate old incoming edges between v1,v2.
         for w in adj_in:
             if (w != v):
                 self.graph.add_edge(w,v1,color=0)
                 self.graph.add_edge(w,v2,color=0)
-        # add new incoming edges - eponymously, split the old incoming edges.
+        # add new outgoing edges - eponymously, split the old outgoing edges.
         for w in adj_out:
             in_E1 = (E1[w] != 0)
             in_E2 = (E2[w] != 0)

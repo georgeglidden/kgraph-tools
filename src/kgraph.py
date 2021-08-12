@@ -1,18 +1,19 @@
 from itertools import chain
+from collections import deque
 
 class ColoredDigraph:
     """
     a mutable directed graph with k-colored edges
     """
-    def __init__(self, vertices=[0], edges=[], adj=None, k=1):
+    def __init__(self, vertices=[0], edges=[], k=1, adj=None):
         """
         constructs a mutable digraph with edges in k colors
         :param vertices: initial set of vertex labels
         :param edges: iterable of integer triplets defining edges with (source,
         range, color)
+        :param k: number of edge colors
         :param adj: a preconstructed adjacency table. UNSAFE! use only when
         instantiating subgraphs from a well-defined ColoredDigraph object.
-        :param k: number of edge colors
         """
         self._k = k
         self._vertices = []
@@ -219,36 +220,36 @@ class ColoredDigraph:
         return '\n'.join([l1,l2]+adjacency_strings)
 
 class CC(ColoredDigraph):
-    """
-    uses the mutability of ColoredDigraph to find connected components from an
-    edge set
-    """
     def __init__(self, pairs):
         flat_pairs = chain(*pairs)
         unique_terms = set(flat_pairs)
-        super(self).__init__(vertices=unique_terms,
-                             edges=pairs,
+        super().__init__(vertices=unique_terms,
+                             edges=[(x,y,0) for (x,y) in pairs],
                              k=1)
 
-    def components(self):
+    def components(self, filter=None):
         """
         implements connected components via breadth firsth search.
+        :param filter: any boolean function on the vertex set
         :return CC: lists of connected vertices for each component
         :return connectivity: an array associating vertices to their compenent
         index in `CC.`
         """
+        if (filter==None):
+            filter = lambda v: True
         CC = []
         connectivity = [-1 for v in self.vertices()]
+        condition = lambda v: ((connectivity[v] == -1) and filter(v))
         for u in self.vertices():
-            if (connectivity[u] == -1):
+            if condition(u):
                 connectivity[u] = len(CC)
-                CC.append(u)
+                CC.append([])
                 deq = deque([u])
                 while len(deq) != 0:
                     CC[-1].append(deq.popleft())
                     v = CC[-1][-1]
                     for w in self.adj(v,symmetric=True):
-                        if (connectivity[w] == -1):
+                        if condition(w):
                             connectivity[w] = connectivity[v]
                             deq.append(w)
         return CC, connectivity
