@@ -24,7 +24,7 @@ class Move:
     def _check(self):
         """
         determines if there are any legal moves on the graph. ideally, it should
-        calculate the set (or subset) of viable components.
+        calculate the set (or a sufficient subset) of viable components.
         :return: a list that is non-empty when there are viable subgraphs.
         """
         raise NotImplementedError()
@@ -34,6 +34,7 @@ class Move:
         performs an action on the graph, with respect to certain properties of
         the subgraph.
         :param component: a viable subgraph.
+        :return: the graph formed by action on the component.
         """
         raise NotImplementedError()
 
@@ -43,6 +44,7 @@ class Move:
         :param component: the subgraph on which the move is performed. must be
         viable, as defined by the implementation.
         :param in_place: (to be implemented) when False, `self.graph` will not be modified.
+        :return: the graph formed by action on the component.
         """
         if (not self.active):
             return self.graph
@@ -68,12 +70,14 @@ class K1Move(Move):
 
     def _secondary_check(self):
         """
-        determines if there are any legal moves on the graph.
-        :return: boolean, True iff there is a viable component in `self.graph`
+        determines if there are any legal moves on the graph. ideally it should
+        calculate the set (or a sufficient subset) of viable components.
+        :return: a list that is non-empty when there are viable subgraphs.
         """
         raise NotImplementedError()
 
 class SinkDelete(K1Move):
+    # move (S)
 
     def sink(self, v):
         """
@@ -109,7 +113,7 @@ class SinkDelete(K1Move):
     def _action(self, component):
         """
         :param component: one or more sinks
-        :return: a ColoredDigraph with every vertex from `component` deleted.
+        :return: a graph with every vertex from `component` deleted.
         """
         if (type(component) == int):
             component = [component]
@@ -123,6 +127,7 @@ class SinkDelete(K1Move):
         return self.graph
 
 class Reduction(K1Move):
+    # move (R)
 
     def reducible(self, v):
         """
@@ -162,7 +167,7 @@ class Reduction(K1Move):
     def _action(self, component):
         """
         :param component: one or more reducible vertices
-        :return: a ColoredDigraph with every vertex in `component` deleted, and
+        :return: a graph with every vertex in `component` deleted, and
         updated edges to preserve connectivity.
         """
         if (type(component) == int):
@@ -186,8 +191,13 @@ class Reduction(K1Move):
         return self.graph
 
 class Insplit(K1Move):
+    # move (I)
 
     def splittable(self, v):
+        """
+        :param v: a vertex
+        :return: boolean, true when v has at least two in-adjacent neighbors.
+        """
         adj_in = self.graph.adj(v)[1]
         return (len(set(adj_in)) >= 2)
 
@@ -195,7 +205,7 @@ class Insplit(K1Move):
         """
         :param component: a three-tuple containing a splittable vertex, and two
         adjacency tables which partition its incoming edge set.
-        :return: boolean, True iff component satisfies the definition.
+        :return: boolean, true when the component satisfies its definition.
         """
         v, E1, E2 = component
         if (not self.splittable(v)):
@@ -213,7 +223,8 @@ class Insplit(K1Move):
         """
         determines if there are any legal moves on the graph.
         :return: list of splittable vertices with arbitrary partitions of their
-        incoming edge sets.
+        incoming edge sets. this list is sufficient, as all other partitions
+        can be constructed by shuffling around the arbitrary partition.
         """
         components = []
         for v in self.graph.vertices():
@@ -224,6 +235,8 @@ class Insplit(K1Move):
                     adjacency_table[w] += 1
                 x = next(i for i in adjacency_table
                          if (adjacency_table[i]!=0))
+                # the i!=v condition isn't strictly necessary, but since these
+                # partitions are arbitrary anways, i want them to look nice.
                 for w in self.graph.adj(v)[1]:
                     if (w == x):
                         E1[w] = adjacency_table[w]
@@ -236,7 +249,7 @@ class Insplit(K1Move):
         """
         :param component: a three-tuple containing a splittable vertex, and two
         adjacency tables which partition its incoming edge set.
-        :return: a graph, insplit at the component.
+        :return: the graph formed by insplitting at the component.
         """
         # unpack the component
         v, E1, E2 = component
@@ -268,16 +281,21 @@ class Insplit(K1Move):
         return self.graph
 
 class Outsplit(K1Move):
+    # move (O)
 
     def splittable(self, v):
+        """
+        :param v: a vertex
+        :return: boolean, true when v has at least two out-adjacent neighbors.
+        """
         adj_out = self.graph.adj(v)[0]
         return (len(set(adj_out)) >= 2)
 
     def _viable(self, component):
         """
         :param component: a three-tuple containing a splittable vertex, and two
-        adjacency tables which partition its incoming edge set.
-        :return: boolean, True iff component satisfies the definition.
+        adjacency tables which partition its outgoing edge set.
+        :return: boolean, true when the component satisfies its definition.
         """
         v, E1, E2 = component
         if (not self.splittable(v)):
@@ -295,7 +313,8 @@ class Outsplit(K1Move):
         """
         determines if there are any legal moves on the graph.
         :return: list of splittable vertices with arbitrary partitions of their
-        incoming edge sets.
+        outgoing edge sets. this list is sufficient, as all other partitions
+        can be constructed by shuffling around the arbitrary partition.
         """
         components = []
         for v in self.graph.vertices():
@@ -306,8 +325,6 @@ class Outsplit(K1Move):
                     adjacency_table[w] += 1
                 x = next(i for i in adjacency_table
                          if (adjacency_table[i]!=0 and i!=v))
-                # the i!=v condition isn't strictly necessary, but since these
-                # partitions are arbitrary anways, i want them to look nice ):<
                 for w in self.graph.adj(v)[0]:
                     if (w == x):
                         E1[w] = adjacency_table[w]
@@ -320,7 +337,7 @@ class Outsplit(K1Move):
         """
         :param component: a three-tuple containing a splittable vertex, and two
         adjacency tables which partition its incoming edge set.
-        :return: a graph, insplit at the component.
+        :return: the graph formed by outsplitting at the component.
         """
         # unpack the component
         v, E1, E2 = component
@@ -352,21 +369,27 @@ class Outsplit(K1Move):
         return self.graph
 
 class CuntzSplice(K1Move):
+    # move (C)
 
     def __init__(self, skeleton):
         """
         :param skeleton: a ColoredDigraph object.
         """
         self.graph = skeleton
+
+        # associates every vertex to the cycles it supports.
         self.cyclefinder = CycleFinder(self.graph)
+        # an undirected graph: nodes are cycles, edges correspond to cycles
+        # whose paths intersect.
         self.cycleintersection = CycleIntersection(self.graph, self.cyclefinder)
+
         self.viable = self._check()
         self.active = (len(self.viable) > 0)
 
     def condition_C(self, v):
         """
         :param v: a vertex
-        :return: boolean, True iff v supports at least two return paths
+        :return: boolean, true when v supports at least two return paths
         """
         cycles_at_v = self.cyclefinder[v]
         nb_cycles = len(cycles_at_v)
@@ -398,8 +421,8 @@ class CuntzSplice(K1Move):
     def _viable(self, component):
         """
         :param component: one or more vertices
-        :return: boolean, True iff every vertex in `component` satisfies the
-        condition.
+        :return: boolean, true when every vertex in `component` satisfies
+        condition C.
         """
         if (type(component) == int):
             component = [component]
@@ -443,11 +466,12 @@ class CuntzSplice(K1Move):
         return self.graph
 
 class Eclose(CuntzSplice):
+    # move (P)
 
     def condition_P(self, v):
         """
         :param v: a vertex
-        :return: boolean, True iff v has one loop and no other return path, and
+        :return: boolean, true when v has one loop and no other return path, and
         the loop has an exit.
         """
         outgoing_v = self.graph.adj(v)[0]
@@ -463,8 +487,8 @@ class Eclose(CuntzSplice):
     def _viable(self, component):
         """
         :param component: a vertex
-        :return: boolean, True iff every vertex in `component` satisfies the
-        condition.
+        :return: boolean, true when the component vertex satisfies condition P,
+        and its outgoing neighbors support condition C.
         """
         if (type(component) == int):
             u = component
