@@ -220,12 +220,13 @@ class ColoredDigraph:
         return '\n'.join([l1,l2]+adjacency_strings)
 
 class CC(ColoredDigraph):
-    def __init__(self, pairs):
-        flat_pairs = chain(*pairs)
-        unique_terms = set(flat_pairs)
-        super().__init__(vertices=unique_terms,
-                             edges=[(x,y,0) for (x,y) in pairs],
-                             k=1)
+    def __init__(self, pairs, vertices=None):
+        if (vertices==None):
+            flat_pairs = chain(*pairs)
+            vertices = set(flat_pairs)
+        super().__init__(vertices=vertices,
+                         edges=[(x,y,0) for (x,y) in pairs],
+                         k=1)
 
     def components(self, filter=None):
         """

@@ -1,4 +1,5 @@
 from kgraph import ColoredDigraph
+from cycles_interface import CycleFinder, CycleIntersection
 
 class Move:
     """
@@ -36,11 +37,12 @@ class Move:
         """
         raise NotImplementedError()
 
-    def __call__(self, component):
+    def __call__(self, component, in_place=True):
         """
         performs the move if `component` is viable, and if the object is active.
         :param component: the subgraph on which the move is performed. must be
         viable, as defined by the implementation.
+        :param in_place: (to be implemented) when False, `self.graph` will not be modified.
         """
         if (not self.active):
             return self.graph
@@ -123,11 +125,15 @@ class SinkDelete(K1Move):
 class Reduction(K1Move):
 
     def reducible(self, v):
+        """
+        :param v: a vertex
+        :return: boolean, True iff (1) all outgoing edges go to the same vertex,
+        and there is only one incoming edge and (2) there are no self loops
+        """
         adj_out, adj_in = self.graph.adj(v)
-        # all outgoing edges range to the same vertex, and there is only one
-        # incoming edge.
+        # (1)
         if (len(set(adj_out)) == len(adj_in) == 1):
-            # no self loops
+            # (2)
             return (adj_out[0] != v)
         else:
             return False
@@ -345,6 +351,164 @@ class Outsplit(K1Move):
                 assert False, 'viability check failed: malformed partition'
         return self.graph
 
+class CuntzSplice(K1Move):
+
+    def __init__(self, skeleton):
+        """
+        :param skeleton: a ColoredDigraph object.
+        """
+        self.graph = skeleton
+        self.cyclefinder = CycleFinder(self.graph)
+        self.cycleintersection = CycleIntersection(self.graph, self.cyclefinder)
+        self.viable = self._check()
+        self.active = (len(self.viable) > 0)
+
+    def condition_C(self, v):
+        """
+        :param v: a vertex
+        :return: boolean, True iff v supports at least two return paths
+        """
+        cycles_at_v = self.cyclefinder[v]
+        nb_cycles = len(cycles_at_v)
+        if (nb_cycles == 0):
+            return False
+        elif (nb_cycles == 1):
+            if (len(self.cyclefinder.cycles[cycles_at_v[0]]) == 1):
+                # loop(s) - are there at least two?
+                return (len([w for w in self.graph.adj(v)[0]
+                             if w == v]) >= 2)
+            else:
+                # non-loop cycle
+                mu = cycles_at_v[0]
+                if (len(self.cycleintersection.intersect(mu)) == 0):
+                    return False
+                else:
+                    nu = self.cycleintersection.intersect(mu)[0]
+                    # exactly two return paths when component {mu,nu} ~= K_2
+                    return (len(self.cycleintersection.intersect(nu))==1)
+        elif (nb_cycles == 2):
+            # two cycles; at least one is not a loop.
+            mu1,mu2 = cycles_at_v
+            # exactly two return paths when mu1 and mu2 only intersect eachother
+            return (self.cycleintersection)
+        else:
+            # > 2 return paths
+            return True
+
+    def _viable(self, component):
+        """
+        :param component: one or more vertices
+        :return: boolean, True iff every vertex in `component` satisfies the
+        condition.
+        """
+        if (type(component) == int):
+            component = [component]
+        try:
+            return all([self.condition_C(v) for v in component])
+        except TypeError as e:
+            raise e
+        except:
+            raise ValueError("received a non-vertex element in `component`.")
+
+    def _secondary_check(self):
+        """
+        determines if there are any legal moves on the graph.
+        :return: list of vertices which support two return paths.
+        """
+        return [v for v in self.graph.vertices()
+                if self.condition_C(v)]
+
+    def _action(self, component):
+        """
+        :param component: one or more vertices
+        :return: a graph with the Cuntz Splice performed on every vertex in
+        `component`.
+        """
+        if (type(component) == int):
+            component = [component]
+        try:
+            for v in component:
+                w1 = self.graph.add_vertex()
+                w2 = self.graph.add_vertex()
+                self.graph.add_edge(v,w1,color=0)
+                self.graph.add_edge(w1,v,color=0)
+                self.graph.add_edge(w1,w1,color=0)
+                self.graph.add_edge(w1,w2,color=0)
+                self.graph.add_edge(w2,w1,color=0)
+                self.graph.add_edge(w2,w2,color=0)
+        except TypeError as e:
+            raise e
+        except:
+            raise ValueError("received a non-vertex element in `component`.")
+        return self.graph
+
+class Eclose(CuntzSplice):
+
+    def condition_P(self, v):
+        """
+        :param v: a vertex
+        :return: boolean, True iff v has one loop and no other return path, and
+        the loop has an exit.
+        """
+        outgoing_v = self.graph.adj(v)[0]
+        nb_outgoing = len(outgoing_v)
+        loops_at_v = [w for w in outgoing_v if w == v]
+        nb_loops = len(loops_at_v)
+        cycles_at_v = self.cyclefinder[v]
+        nb_cycles = len(cycles_at_v)
+        return ((nb_loops == 1) and             # supports a loop
+                (nb_cycles == nb_loops) and     # and no other return path,
+                (nb_outgoing - nb_loops > 0))   # and the loop has an exit.
+
+    def _viable(self, component):
+        """
+        :param component: a vertex
+        :return: boolean, True iff every vertex in `component` satisfies the
+        condition.
+        """
+        if (type(component) == int):
+            u = component
+            if self.condition_P(u):
+                return all(self.condition_C(w)
+                           for w in self.graph.adj(u)[0] if (w!=u))
+            else:
+                return False
+        else:
+            raise TypeError("the component vertex was not of type int")
+
+    def _secondary_check(self):
+        """
+        determines if there are any legal moves on the graph.
+        :return: list of vertices whose return paths consists of a single
+        loop, and whose outgoing neighbors all support >=2 return paths.
+        """
+        return [v for v in self.graph.vertices()
+                if self._viable(v)]
+
+    def _action(self, component):
+        """
+        :param component: a vertex
+        :return: a graph, formed by performing move (P) on the component vertex.
+        """
+        if (type(component) == int):
+            u = component
+            S = [w for w in self.graph.adj(u)[0] if (w!=u)]
+            for v in S:
+                # Cuntz Splice at every vertex of `S`
+                w1 = self.graph.add_vertex()
+                w2 = self.graph.add_vertex()
+                self.graph.add_edge(v,w1,color=0)
+                self.graph.add_edge(w1,v,color=0)
+                self.graph.add_edge(w1,w1,color=0)
+                self.graph.add_edge(w1,w2,color=0)
+                self.graph.add_edge(w2,w1,color=0)
+                self.graph.add_edge(w2,w2,color=0)
+                # eclose the cycle at `u`
+                self.graph.add_edge(w2,u,color=0)
+                self.graph.add_edge(w2,u,color=0)
+            return self.graph
+        else:
+            raise TypeError("the component vertex was not of type int")
 
 def main():
     print("\nSINK DELETION")
@@ -383,5 +547,25 @@ def main():
     print("viable:", O.viable)
     print("final graph")
     print(O(O.viable[0]).to_string())
+    print("\nCUNTZ SPLICE")
+    g5 = ColoredDigraph(vertices=[0,1],edges=[(0,0,0),(0,1,0),(1,0,0)])
+    print("initial graph")
+    print(g5.to_string())
+    C = CuntzSplice(g5)
+    print("viable:", C.viable)
+    print("final graph")
+    print(C(C.viable[-1]).to_string())
+    print("\nECLOSE")
+    g6 = ColoredDigraph(vertices=[0,1,2],edges=[(0,0,0),(0,1,0),
+                                                (1,0,0),(1,1,0),
+                                                (2,0,0),(2,1,0),(2,2,0)])
+    print("initial graph")
+    print(g6.to_string())
+    P = Eclose(g6)
+    print("viable:", P.viable)
+    print("final graph")
+    g6_2 = P(P.viable[-1])
+    print(g6_2.to_string())
+
 if __name__ == "__main__":
     main()
