@@ -1,7 +1,7 @@
 from itertools import chain
 
-from kgraph import CC,ColoredDigraph
-from python_simple_cycles.johnson import simple_cycles
+from ..kgraph import CC, ColoredDigraph
+from .python_simple_cycles import simple_cycles
 
 class CycleFinder:
     """
@@ -128,80 +128,3 @@ class CycleIntersection:
         in_path = lambda d: filtered_chain[d]
         restr_CC, restr_connectivity = self._CC.components(filter=in_path)
         return restr_CC[restr_connectivity[c]]
-
-def main():
-    from os import system, name
-    #print("skeleton")
-    skeleton = ColoredDigraph(vertices=list(range(9)),
-                              edges=[(0,3,0),(0,5,0),(0,7,0),
-                                     (1,2,0),
-                                     (2,2,0),
-                                     (3,0,0),(3,5,0),
-                                     (4,6,0),(4,8,0),
-                                     (5,0,0),(5,3,0),(5,7,0),
-                                     (6,4,0),(6,8,0),
-                                     (7,0,0),(7,2,0),(7,5,0),(7,8,0),
-                                     (8,4,0),(8,6,0),(8,7,0)],
-                              k=1)
-    print(skeleton.to_string())
-    print("cyclefinder")
-    cyclefinder = CycleFinder(skeleton)
-    print("cycles to vertices")
-    print(cyclefinder.cycles)
-    print("vertices to cycles")
-    print([cyclefinder[v] for v in skeleton.vertices()])
-    print("intersection")
-    cyclegraph = CycleIntersection(skeleton, cyclefinder)
-    print("cycle adjacency list")
-    print([cyclegraph.intersect(c) for c in range(cyclegraph.C())])
-    print("largest return paths")
-    print([((v,c),cyclegraph.component(v,c)) for v in skeleton.vertices() for c in cyclefinder[v]])
-    #cyc = CycleFinder(skeleton)
-    #itx = CycleIntersection(skeleton,cyc)
-    #while True:
-    #    system('cls' if name == 'nt' else 'clear')
-    #    print(f"vertices: {skeleton.vertices()}\nplease enter an integer from the list of vertices, or ~ to exit.")
-    #    v = 0
-    #    while True:
-    #        v = input()
-    #        try:
-    #            v = int(v)
-    #            if v in skeleton.vertices():
-    #                break
-    #        except:
-    #            if (v == '~'):
-    #                return
-    #            else:
-    #                print(f"please enter an integer from the list {skeleton.vertices()}.")
-    #                continue
-    #    while True:
-    #        system('cls' if name == 'nt' else 'clear')
-    #        print("cycles:",list(range(cyc.C())))
-    #        print(f"vertex {v} supports cycles {cyc[v]}\nplease enter an integer from the list of cycles, or ~ to go back.")
-    #        while True:
-    #            c = input()
-    #            try:
-    #                c = int(c)
-    #                if c in cyc[v]:
-    #                    break
-    #                else:
-    #                    continue
-    #            except:
-    #                if (c=='~'):
-    #                    break
-    #                else:
-    #                    print(f"please enter an integer from the list {cyc[v]}.")
-    #                    continue
-    #        if (c=='~'):
-    #            break
-    #        else:
-    #            print(f"cycle {c} intersects cycles {itx.intersect(c)}")
-    #            print(f"the largest return path of {v} at {c} traverses the cycles {itx.component(v,c)}")
-    #            print("enter ~ to pick a different vertex, or anything else to pick a different cycle.")
-    #            if (input()=='~'):
-    #                break
-    #            else:
-    #                continue
-
-if __name__ == "__main__":
-    main()
