@@ -53,8 +53,8 @@ class CycleIntersection:
             for v in self.cyclefinder.cycles[c]:
                 for d in self.cyclefinder[v]:
                     if (c != d):
-                        self._adj[c].add(d)
-                        self._adj[d].add(c)
+                        self._adj[c].add((d,v))
+                        self._adj[d].add((c,v))
                         self._intersections.add((min([c,d]),max([c,d])))
         # find components in the cycle intersection graph
         self._CC = CC(self._intersections, vertices=range(self.C()))
@@ -76,12 +76,17 @@ class CycleIntersection:
         return sum([len(self._adj(c))
                     for c in range(self.C())]) // 2
 
-    def intersect(self, c):
+    def intersect(self, c, restrict=None):
         """
         :param c: the index of a cycle, between 0 and `self.C()`-1.
+        :param restrict: a map from vertices to
+        boolean values, use to omit vertices from
+        the intersection.
         :return: iterable, cycles that intersect `c`.
         """
-        return list(self._adj[c])
+        if (restrict==None):
+            restrict = lambda v: True
+        return list(set(d for d,v in self._adj[c] if (not retrict(v))))
 
     def _set_vector(self, X):
         self._loaded = X
