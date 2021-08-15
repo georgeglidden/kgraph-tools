@@ -34,21 +34,11 @@ class CuntzSplice(K1Move):
                 return (len([w for w in self.graph.adj(v)[0]
                              if w == v]) >= 2)
             else:
-                # non-loop cycle
+                # one non-loop cycle - does it intersect with any others?
                 mu = cycles_at_v[0]
-                if (len(self.cycleintersection.intersect(mu)) == 0):
-                    return False
-                else:
-                    nu = self.cycleintersection.intersect(mu)[0]
-                    # exactly two return paths when component {mu,nu} ~= K_2
-                    return (len(self.cycleintersection.intersect(nu))==1)
-        elif (nb_cycles == 2):
-            # two cycles; at least one is not a loop.
-            mu1,mu2 = cycles_at_v
-            # exactly two return paths when mu1 and mu2 only intersect eachother
-            return (self.cycleintersection)
+                return (len(self.cycleintersection.intersect(mu)) > 0)
         else:
-            # > 2 return paths
+            # >= 2 return paths
             return True
 
     def _viable(self, component):
@@ -96,4 +86,122 @@ class CuntzSplice(K1Move):
             raise e
         except:
             raise ValueError("received a non-vertex element in `component`.")
+        return self.graph
+
+class CuntzSpliceInverse(CuntzSplice):
+
+    def motif(self, v):
+        """
+        tries to find a (C)-motif, a tuple of vertices (u,w,v) such that
+         (i)    v has a self loop, two more edges going to and from a vertex w,
+                and no other edges.
+         (ii)   w has a self loop, two edges going to and from v, and two
+                verties going to and from a vertex u.
+         (iii)  u has at least two return paths that do not traverse v or w.
+        :param v: a vertex
+        :return: the (C)-motif at `v`, or an empty tuple.
+        """
+        def c1(x, out_adj_x, in_adj_x):
+            # indegree = outdegree
+            if len(out_adj_x) == len(in_adj_x) == 2:
+                i = out_adj_x.index(x)
+                # has a loop
+                if ((i >= 0) and (x in in_adj_x)):
+                    y = out_adj_x[i-1]
+                    # has a 2-cycle with y
+                    return ((y!=x) and (y in in_adj_x))
+                else:
+                    return False
+            else:
+                return False
+
+        def c2(x, out_adj_x, in_adj_x):
+            # indegree = outdegree
+            if len(out_adj_x) == len(in_adj_x) == 3:
+                i = out_adj_x.index(x)
+                # has a loop
+                if ((i >= 0) and (x in in_adj_x)):
+                    y = out_adj_x[i-1]
+                    z = out_adj_x[i-2]
+                    # has a 2 cycle with y,z
+                    return ((y!=x) and (y in in_adj_x) and
+                            (z!=x) and (z in in_adj_x))
+                else:
+                    return False
+            else:
+                return False
+
+        def c3(x, omit, cyclefinder, cycleintersection, graph):
+            # cycles restricting the contents of `omit`
+            cycles_at_x = [c for c in cyclefinder[x]
+                           if all((o not in cyclefinder.cycles[c])
+                                  for o in omit)]
+            nb_cycles = len(cycles_at_x)
+            if (nb_cycles == 0):
+                return False
+            elif (nb_cycles == 1):
+                # cycle is a loop - how many loops?
+                if (len(cyclefinder.cycles[cycles_at_x[0]]) == 1):
+                    return (len([
+                        w for w in graph.adj(x)[0] if (w == x)
+                        ]) >= 2)
+                else:
+                    # one non-loop cycle - how many intersections?
+                    mu = cycles_at_x[0]
+                    filter = lambda v: all((v!=o) for o in omit)
+                    mu_adj = cycleintersection.intersect(mu, filter)
+                    return (len(mu_adj) > 0)
+            else:
+                return True
+
+        out_adj_v, in_adj_v = self.graph.adj(v)
+        # condition (i)
+        if c1(v, out_adj_v, in_adj_v):
+            w = next(x for x in out_adj_v
+                     if (x!=v))
+            out_adj_w, in_adj_w = self.graph.adj(w)
+            # condition (ii)
+            if c2(w, out_adj_w, in_adj_w):
+                u = next(x for x in self.graph.adj(w)[0]
+                         if ((x!=v) and (x!=w)))
+                # condition (iii)
+                if c3(u, (w,v),
+                      self.cyclefinder, self.cycleintersection, self.graph):
+                    return (u,w,v)
+        return ()
+
+    def _viable(self, component):
+        """
+        :param component: list of tuples of three vertices w, v1, v2
+        :return: boolean, true when (w, v1, v2) is the (C)-motif at v2
+        """
+        if (type(component) == tuple):
+            component = [component]
+        return all((m == self.motif(m[-1]))
+                   for m in component)
+
+    def _secondary_check(self):
+        """
+        determines if there are any legal moves on the graph.
+        :return: a list of all (C)-motifs in the graph.
+        """
+        motifs = []
+        for v in self.graph.vertices():
+            motif_at_v = self.motif(v)
+            if (len(motif_at_v) == 3):
+                motifs.append(motif_at_v)
+        return motifs
+
+    def _action(self, component):
+        """
+        :param component: list of (C)-motifs (w, v1, v2)
+        :return: a graph, with the Cuntz Splice inversed at every motif in
+        component
+        """
+        if (type(component) == tuple):
+            component = [component]
+        for m in component:
+            w, v1, v2 = m
+            self.graph.del_vertex(v1)
+            self.graph.del_vertex(v2)
         return self.graph

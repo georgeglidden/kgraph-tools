@@ -1,5 +1,7 @@
 from .k1move import K1Move
 
+from itertools import chain
+
 class Reduction(K1Move):
     # move (R)
 
@@ -62,4 +64,49 @@ class Reduction(K1Move):
             raise e
         except:
             raise ValueError("received a non-vertex element in `component`.")
+        return self.graph
+
+class ReductionInverse(K1Move):
+    # move (S)^{-1}
+
+    def _viable(self, component):
+        """
+        :param component: an edge vw and its degree d, d >= 0.
+        :return: true iff the component is satisfies its definition.
+        """
+        if (type(component) == tuple):
+            if (len(component) == 3):
+                v,w,d = component
+                if (type(d) == int):
+                    if (d > 0):
+                        return (w in self.graph.adj(v)[0])
+                    else:
+                        raise ValueError("d must be a natural number")
+                else:
+                    raise TypeError("expected an integer, received", type(d))
+            else:
+                raise ValueError("the component must be a 2-tuple")
+        else:
+            raise TypeError("expected a tuple, received", type(component))
+
+    def _secondary_check(self):
+        """
+        determines if there are any legal moves on the graph.
+        :return: all edges of degree 1.
+        """
+        return list(chain(*[[(v,w,1)
+                             for w in self.graph.adj(v)[0]]
+                            for v in self.graph.vertices()]))
+
+    def _action(self, component):
+        """
+        :param component: an edge vw and its degree d.
+        :return: a graph with the edge vw replaced by the path vxw.
+        """
+        v,w,d = component
+        self.graph.del_edge(v,w,color=0)
+        x = self.graph.add_vertex()
+        self.graph.add_edge(v,x,color=0)
+        for _ in range(d):
+            self.graph.add_edge(x,w,color=0)
         return self.graph

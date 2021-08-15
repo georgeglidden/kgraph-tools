@@ -40,7 +40,8 @@ class Move:
         performs the move if `component` is viable, and if the object is active.
         :param component: the subgraph on which the move is performed. must be
         viable, as defined by the implementation.
-        :param in_place: (to be implemented) when False, `self.graph` will not be modified.
+        :param in_place: (to be implemented) when false, `self.graph` will not be modified.
+        :param viable_override:
         :return: the graph formed by action on the component.
         """
         if (not self.active):

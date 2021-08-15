@@ -1,4 +1,5 @@
 from .k1move import K1Move
+from itertools import chain
 
 class SinkDelete(K1Move):
     # move (S)
@@ -48,4 +49,35 @@ class SinkDelete(K1Move):
             raise e
         except:
             raise ValueError("received a non-vertex element in `component`.")
+        return self.graph
+
+class SinkDeleteInverse(K1Move):
+
+    def _viable(self, component):
+        """
+        :param component: one or more vertices
+        :return: boolean, True iff every element in the component is a vertex.
+        """
+        if (type(component) == int):
+            component = [component]
+        return all([self.graph.is_vertex(v) for v in component])
+
+    def _secondary_check(self):
+        """
+        determines if there are any legal moves on the graph.
+        :return: every vertex in the graph.
+        """
+        return self.graph.vertices()
+
+    def _action(self, component):
+        """
+        :param component: one or more vertices
+        :return: a graph with a new vertex incident to all vertices in the
+        component.
+        """
+        if (type(component) == int):
+            component = [component]
+        s = self.graph.add_vertex()
+        for v in component:
+            self.graph.add_edge(v,s,color=0)
         return self.graph
