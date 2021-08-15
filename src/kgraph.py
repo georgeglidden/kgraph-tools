@@ -70,6 +70,9 @@ class ColoredDigraph:
         """
         return self._vertices
 
+    def is_vertex(self, v):
+        return all((v in self._adj[color]) for color in self.colors())
+
     def add_vertex(self, v=None):
         """
         creates a new vertex & its adjacency lists
