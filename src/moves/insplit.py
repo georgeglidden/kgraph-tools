@@ -116,7 +116,7 @@ class InsplitInverse(K1Move):
                 if (x==omit):
                     continue
                 arr[x] -= 1
-                if (arr[x] <= 0):
+                if (arr[x] < 0):
                     val = False
                     break
             # regenerate the adjacency vector
@@ -132,7 +132,7 @@ class InsplitInverse(K1Move):
             W = [w]
         else:
             W = w
-        print(f"is {v} split with any element of {W}?")
+        #print(f"is {v} split with any element of {W}?")
         # set the adjacency tables with v
         out_adj_v, in_adj_v = self.graph.adj(v)
         for x in out_adj_v:
@@ -142,23 +142,23 @@ class InsplitInverse(K1Move):
         # filter W
         pairs = set()
         for w in W:
-            print(f"\tis {v} split with {w}?")
+            #print(f"\tis {v} split with {w}?")
             out_adj_w, in_adj_w = self.graph.adj(w)
-            print(f"\tout of {v}: {out_adj_v}\n\tout of {w}: {out_adj_w}")
+            #print(f"\tout of {v}: {out_adj_v}\n\tout of {w}: {out_adj_w}")
             # condition (iii) and a preliminary of (i)
             if ((len(in_adj_v) >= 1 and len(in_adj_w) >= 1)
                 and (len(out_adj_v) == len(out_adj_w))):
-                print("\t\tpassed (iii)")
+                #print("\t\tpassed (iii)")
                 # apply conditions (i) and (ii)
                 if (not c1(out_adj_w, self._out_adj_table, v)):
-                    print("\t\tfailed on (i)")
+                    #print("\t\tfailed on (i)")
                     continue
                 elif c2(in_adj_w, self._in_adj_table, v):
-                    print("\t\tpassed (i) and (ii)")
+                    #print("\t\tpassed (i) and (ii)")
                     pairs.add(w)
         # reset adjacency tables
         for x in out_adj_v:
-            self._out_adj_table[v] -= 1
+            self._out_adj_table[x] -= 1
         for x in in_adj_v:
             self._in_adj_table[x] -= 1
         return pairs
@@ -183,29 +183,31 @@ class InsplitInverse(K1Move):
         """
         pairs = set()
         adj_table = dict((v,0) for v in self.graph.vertices())
-        print("="*100)
-        print("INSPLIT INVERSE SECONDARY CHECK")
+        #print("="*100)
+        #print("INSPLIT INVERSE SECONDARY CHECK")
         for v in self.graph.vertices():
-            print("checking candidates at", v)
+            #print("checking candidates at", v)
             out_adj = self.graph.adj(v)[0]
-            print("\tout adj:", out_adj, len(out_adj))
+            #print("\tout adj:", out_adj, len(out_adj))
             # first pass - each out-neighbor votes to keep their in-neighbors
             for x in out_adj:
                 for z in self.graph.adj(x)[1]:
                     adj_table[z] += 1
-            print("\tadj table", adj_table)
+            #print("\tadj table", adj_table)
             # second pass - filter each vertex that doesn't have 100% vote
-            candidates = set([z for z in self.graph.adj(x)[1]
-                              for x in out_adj
-                              if ((z != v) and (adj_table[z] == len(out_adj)))])
+            candidates = set()
+            for x in out_adj:
+                candidates.update([z for z in self.graph.adj(x)[1]
+                                   if ((z != v) and
+                                       (adj_table[z] == len(out_adj)))])
             for x in out_adj:
                 for z in self.graph.adj(x)[1]:
                     adj_table[z] -= 1
-            print("\tcandidates", candidates)
+            #print("\tcandidates", candidates)
             # find viable pairs
             pairs.update([(min(v,w),max(v,w))
                           for w in self.split(v,candidates)])
-        print("="*100)
+        #print("="*100)
         return list(pairs)
 
     def _action(self, component):

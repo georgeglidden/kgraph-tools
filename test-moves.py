@@ -3,7 +3,7 @@ from src.moves.insplit import Insplit as I, InsplitInverse as IInverse
 from src.moves.cuntzsplice import CuntzSplice as C, CuntzSpliceInverse as CInverse
 from src.moves.reduction import Reduction as R, ReductionInverse as RInverse
 from src.moves.sinkdelete import SinkDelete as S, SinkDeleteInverse as SInverse
-
+from src.moves.outsplit import Outsplit as O, OutsplitInverse as OInverse
 def main():
     print("moves/ module unit test\n")
 
@@ -87,6 +87,31 @@ def main():
     print(IInverse_g.viable)
     print("  post graph")
     print(IInverse_g(IInverse_g.viable[0]).to_string())
+
+    print("MOVE (O)")
+    g = ColoredDigraph(vertices=[1,2,3,4],
+                       edges=[(2,1,0),
+                              (3,1,0),
+                              (2,2,0),
+                              (2,3,0),
+                              (4,2,0)],
+                       k=1)
+    print("  pre graph")
+    print(g.to_string())
+    O_g = O(g)
+    print("  viable components")
+    print(O_g.viable)
+    print("  post graph")
+    print(O_g(O_g.viable[0]).to_string())
+
+    print("MOVE (O)^{-1}")
+    print("  pre graph")
+    print(g.to_string())
+    OInverse_g = OInverse(g)
+    print("  viable components")
+    print(OInverse_g.viable)
+    print("  post graph")
+    print(OInverse_g(OInverse_g.viable[0]).to_string())
 
     print("MOVE (C)")
     g = ColoredDigraph(vertices=[1],
