@@ -90,6 +90,84 @@ class CuntzSplice(K1Move):
 
 class CuntzSpliceInverse(CuntzSplice):
 
+    def c1(self, x, out_adj_x, in_adj_x):
+        """
+        checks condition (i)
+        :param x: a vertex
+        :param out_adj_x: vertices connected to x by outgoing edges
+        :param in_adj_x: vertices connected to x by incoming edges
+        :return: boolean, true if x supports only a loop and a 2-cycle.
+        """
+        # indegree = outdegree
+        if (len(out_adj_x) == len(in_adj_x) == 2):
+            i = out_adj_x.index(x)
+            # has a loop
+            if ((i >= 0) and (x in in_adj_x)):
+                y = out_adj_x[i-1]
+                # has a 2-cycle with y
+                return ((y!=x) and (y in in_adj_x))
+            else:
+                return False
+        else:
+            return False
+
+    def c2(self, x, out_adj_x, in_adj_x):
+        """
+        checks condition (ii)
+        :param x: a vertex
+        :param out_adj_x: vertices connected to x by outgoing edges
+        :param in_adj_x: vertices connected to x by incoming edges
+        :return: boolean, true when x supports only a loop and two 2-cycles.
+        """
+        # indegree = outdegree
+        if (len(out_adj_x) == len(in_adj_x) == 3):
+            i = out_adj_x.index(x)
+            # has a loop
+            if ((i >= 0) and (x in in_adj_x)):
+                y = out_adj_x[i-1]
+                z = out_adj_x[i-2]
+                # has a 2 cycle with y,z
+                return ((y!=x) and (y in in_adj_x) and
+                        (z!=x) and (z in in_adj_x))
+            else:
+                return False
+        else:
+            return False
+
+    def c3(self, x, omit, cyclefinder, cycleintersection, graph):
+        """
+        checks condition (iii)
+        :param x: a vertex
+        :param omit: vertices to ignore
+        :param cyclefinder: maps vertices to cycles and cycles to vertices.
+        :param cycleintersection: a graphlike object describing the intersection
+        of cycles in `cyclefinder`.
+        :param graph: the graph within which all the other objects ^ exist.
+        :return: boolean, true when `x` has at least two return paths that do
+        not traverse any vertex in `omit`.
+        """
+        # cycles restricting the contents of `omit`
+        cycles_at_x = [c for c in cyclefinder[x]
+                       if all((o not in cyclefinder.cycles[c])
+                              for o in omit)]
+        nb_cycles = len(cycles_at_x)
+        if (nb_cycles == 0):
+            return False
+        elif (nb_cycles == 1):
+            # cycle is a loop - how many loops?
+            if (len(cyclefinder.cycles[cycles_at_x[0]]) == 1):
+                return (len([
+                    w for w in graph.adj(x)[0] if (w == x)
+                    ]) >= 2)
+            else:
+                # one non-loop cycle - how many intersections?
+                mu = cycles_at_x[0]
+                filter = lambda v: all((v!=o) for o in omit)
+                mu_adj = cycleintersection.intersect(mu, filter)
+                return (len(mu_adj) > 0)
+        else:
+            return True
+
     def motif(self, v):
         """
         tries to find a (C)-motif, a tuple of vertices (u,w,v) such that
@@ -101,72 +179,21 @@ class CuntzSpliceInverse(CuntzSplice):
         :param v: a vertex
         :return: the (C)-motif at `v`, or an empty tuple.
         """
-        def c1(x, out_adj_x, in_adj_x):
-            # indegree = outdegree
-            if len(out_adj_x) == len(in_adj_x) == 2:
-                i = out_adj_x.index(x)
-                # has a loop
-                if ((i >= 0) and (x in in_adj_x)):
-                    y = out_adj_x[i-1]
-                    # has a 2-cycle with y
-                    return ((y!=x) and (y in in_adj_x))
-                else:
-                    return False
-            else:
-                return False
-
-        def c2(x, out_adj_x, in_adj_x):
-            # indegree = outdegree
-            if len(out_adj_x) == len(in_adj_x) == 3:
-                i = out_adj_x.index(x)
-                # has a loop
-                if ((i >= 0) and (x in in_adj_x)):
-                    y = out_adj_x[i-1]
-                    z = out_adj_x[i-2]
-                    # has a 2 cycle with y,z
-                    return ((y!=x) and (y in in_adj_x) and
-                            (z!=x) and (z in in_adj_x))
-                else:
-                    return False
-            else:
-                return False
-
-        def c3(x, omit, cyclefinder, cycleintersection, graph):
-            # cycles restricting the contents of `omit`
-            cycles_at_x = [c for c in cyclefinder[x]
-                           if all((o not in cyclefinder.cycles[c])
-                                  for o in omit)]
-            nb_cycles = len(cycles_at_x)
-            if (nb_cycles == 0):
-                return False
-            elif (nb_cycles == 1):
-                # cycle is a loop - how many loops?
-                if (len(cyclefinder.cycles[cycles_at_x[0]]) == 1):
-                    return (len([
-                        w for w in graph.adj(x)[0] if (w == x)
-                        ]) >= 2)
-                else:
-                    # one non-loop cycle - how many intersections?
-                    mu = cycles_at_x[0]
-                    filter = lambda v: all((v!=o) for o in omit)
-                    mu_adj = cycleintersection.intersect(mu, filter)
-                    return (len(mu_adj) > 0)
-            else:
-                return True
-
         out_adj_v, in_adj_v = self.graph.adj(v)
         # condition (i)
-        if c1(v, out_adj_v, in_adj_v):
+        if self.c1(v, out_adj_v, in_adj_v):
             w = next(x for x in out_adj_v
                      if (x!=v))
             out_adj_w, in_adj_w = self.graph.adj(w)
             # condition (ii)
-            if c2(w, out_adj_w, in_adj_w):
+            if self.c2(w, out_adj_w, in_adj_w):
                 u = next(x for x in self.graph.adj(w)[0]
                          if ((x!=v) and (x!=w)))
                 # condition (iii)
-                if c3(u, (w,v),
-                      self.cyclefinder, self.cycleintersection, self.graph):
+                if self.c3(u, (w,v),
+                           self.cyclefinder,
+                           self.cycleintersection,
+                           self.graph):
                     return (u,w,v)
         return ()
 
@@ -201,7 +228,7 @@ class CuntzSpliceInverse(CuntzSplice):
         if (type(component) == tuple):
             component = [component]
         for m in component:
-            w, v1, v2 = m
+            _, v1, v2 = m
             self.graph.del_vertex(v1)
             self.graph.del_vertex(v2)
         return self.graph
