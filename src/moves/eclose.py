@@ -79,7 +79,7 @@ class EcloseInverse(CuntzSpliceInverse):
         :return: boolean, true when v has one loop and no other return path, and
         the loop has an exit.
         """
-        print(f"does vertex {v} meet condition (P)?")
+        #print(f"does vertex {v} meet condition (P)?")
         outgoing_v = self.graph.adj(v)[0]
         nb_outgoing = len(outgoing_v)
         loops_at_v = [w for w in outgoing_v if w == v]
@@ -141,7 +141,7 @@ class EcloseInverse(CuntzSpliceInverse):
         """
         out_adj_v, in_adj_v = self.graph.adj(v)
         # condition (i)
-        print(f"searching for a (P)-motif at {v} with adj {out_adj_v}, {in_adj_v}")
+        #print(f"searching for a (P)-motif at {v} with adj {out_adj_v}, {in_adj_v}")
         if self.c1(v, out_adj_v, in_adj_v):
             w = next(x for x in in_adj_v
                      if (x!=v))
@@ -186,26 +186,26 @@ class EcloseInverse(CuntzSpliceInverse):
         motifs = []
         # first pass - find the motifs and construct the bins
         for v in self.graph.vertices():
-            print("checking vertex",v)
+            #print("checking vertex",v)
             motif_at_v = self.motif(v)
             if (len(motif_at_v) == 4):
-                print(f"motif at {v}: {motif_at_v}")
+                #print(f"motif at {v}: {motif_at_v}")
                 u = motif_at_v[3]
                 self._bins[u] = []
                 motifs.append(motif_at_v)
-        print("motifs", motifs)
+        #print("motifs", motifs)
         # second pass - sort the motifs by their bin label
         for m in motifs:
             u = m[3]
             self._bins[u].append(m)
-        print("sorted motifs", self._bins)
+        #print("sorted motifs", self._bins)
         # third pass - filter for malformed `u`
         keys = []
         for u in self._bins.keys():
             v2 = list(chain(m[2] for m in self._bins[u]))
             if self.condition_P(u,omit=v2):
                 keys.append(u)
-        print("keys:", keys)
+        #print("keys:", keys)
         return keys
 
     def _action(self, component):

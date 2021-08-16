@@ -158,18 +158,32 @@ def main():
     print(CInverse_g(CInverse_g.viable[0]).to_string())
 
     print("MOVE (P)")
-    g = ColoredDigraph(vertices=[1,2],
+    g = ColoredDigraph(vertices=[1,2,3,4],
                        edges=[(1,1,0),
                               (1,1,0),
                               (2,1,0),
-                              (2,2,0)],
+                              (2,2,0),
+                              (3,1,0),
+                              (3,3,0),
+                              (4,1,0),
+                              (4,4,0)],
                        k=1)
     print("  pre graph")
     print(g.to_string())
     P_g = P(g)
     print("  viable components")
     print(P_g.viable)
-    print("  graph (C)")
+    print("  graph (P)")
+    print(P_g(P_g.viable[-1]).to_string())
+    P_g = P(g)
+    print("  viable components")
+    print(P_g.viable)
+    print("  graph (P) (P)")
+    print(P_g(P_g.viable[-1]).to_string())
+    P_g = P(g)
+    print("  viable components")
+    print(P_g.viable)
+    print("  graph (P) (P) (P)")
     print(P_g(P_g.viable[-1]).to_string())
 
     print("MOVE (P)^{-1}")
@@ -178,7 +192,17 @@ def main():
     PInverse_g = PInverse(g)
     print("  viable components")
     print(PInverse_g.viable)
-    print("  graph (C)")
+    print("  graph (P)^{-1}")
+    print(PInverse_g(PInverse_g.viable[-1]).to_string())
+    PInverse_g = PInverse(g)
+    print("  viable components")
+    print(PInverse_g.viable)
+    print("  graph (P)^{-1} (P)^{-1}")
+    print(PInverse_g(PInverse_g.viable[-1]).to_string())
+    PInverse_g = PInverse(g)
+    print("  viable components")
+    print(PInverse_g.viable)
+    print("  graph (P)^{-1} (P)^{-1} (P)^{-1}")
     print(PInverse_g(PInverse_g.viable[-1]).to_string())
 
 if __name__ == "__main__":
