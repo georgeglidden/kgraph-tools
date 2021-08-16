@@ -67,26 +67,22 @@ class CuntzSplice(K1Move):
     def _action(self, component):
         """
         :param component: one or more vertices
-        :return: a graph with the Cuntz Splice performed on every vertex in
-        `component`.
+        :return: a function which Cuntz splices a graph at the component.
         """
         if (type(component) == int):
             component = [component]
-        try:
+        def _cuntzsplice(graph, component=component):
             for v in component:
-                w1 = self.graph.add_vertex()
-                w2 = self.graph.add_vertex()
-                self.graph.add_edge(v,w1,color=0)
-                self.graph.add_edge(w1,v,color=0)
-                self.graph.add_edge(w1,w1,color=0)
-                self.graph.add_edge(w1,w2,color=0)
-                self.graph.add_edge(w2,w1,color=0)
-                self.graph.add_edge(w2,w2,color=0)
-        except TypeError as e:
-            raise e
-        except:
-            raise ValueError("received a non-vertex element in `component`.")
-        return self.graph
+                w1 = graph.add_vertex()
+                w2 = graph.add_vertex()
+                graph.add_edge(v,w1,color=0)
+                graph.add_edge(w1,v,color=0)
+                graph.add_edge(w1,w1,color=0)
+                graph.add_edge(w1,w2,color=0)
+                graph.add_edge(w2,w1,color=0)
+                graph.add_edge(w2,w2,color=0)
+            return graph
+        return _cuntzsplice
 
 class CuntzSpliceInverse(CuntzSplice):
 
@@ -222,13 +218,15 @@ class CuntzSpliceInverse(CuntzSplice):
     def _action(self, component):
         """
         :param component: list of (C)-motifs (w, v1, v2)
-        :return: a graph, with the Cuntz Splice inversed at every motif in
-        component
+        :return: a function which inverse Cuntz splices a graph at the
+        component.
         """
         if (type(component) == tuple):
             component = [component]
-        for m in component:
-            _, v1, v2 = m
-            self.graph.del_vertex(v1)
-            self.graph.del_vertex(v2)
-        return self.graph
+        def _cuntzspliceinverse(graph, component=component):
+            for m in component:
+                _, v1, v2 = m
+                graph.del_vertex(v1)
+                graph.del_vertex(v2)
+            return graph
+        return _cuntzspliceinverse

@@ -20,7 +20,7 @@ def main():
     print("  viable components")
     print(S_g.viable)
     print("  post graph")
-    print(S_g(S_g.viable[0]).to_string())
+    print(S_g(S_g.viable[0])(g).to_string())
 
     print("MOVE (S)^{-1}")
     g = ColoredDigraph(vertices=[1,2,3],
@@ -34,7 +34,7 @@ def main():
     print("  viable components")
     print(SInverse_g.viable)
     print("  post graph")
-    print(SInverse_g(S_g.viable).to_string())
+    print(SInverse_g(S_g.viable)(g).to_string())
 
     print("MOVE (R)")
     g = ColoredDigraph(vertices=[1,2,3],
@@ -48,7 +48,7 @@ def main():
     print("  viable components")
     print(R_g.viable)
     print("  post graph")
-    print(R_g(R_g.viable[0]).to_string())
+    print(R_g(R_g.viable[0])(g).to_string())
 
     print("MOVE (R)^{-1}")
     g = ColoredDigraph(vertices=[1,2,3],
@@ -62,7 +62,7 @@ def main():
     print("  viable components")
     print(RInverse_g.viable)
     print("  post graph")
-    print(RInverse_g(RInverse_g.viable[0]).to_string())
+    print(RInverse_g(RInverse_g.viable[0])(g).to_string())
 
     print("MOVE (I)")
     g = ColoredDigraph(vertices=[1,2,3,4],
@@ -78,7 +78,7 @@ def main():
     print("  viable components")
     print(I_g.viable)
     print("  post graph")
-    print(I_g(I_g.viable[0]).to_string())
+    print(I_g(I_g.viable[0])(g).to_string())
 
     print("MOVE (I)^{-1}")
     print("  pre graph")
@@ -87,7 +87,7 @@ def main():
     print("  viable components")
     print(IInverse_g.viable)
     print("  post graph")
-    print(IInverse_g(IInverse_g.viable[0]).to_string())
+    print(IInverse_g(IInverse_g.viable[0])(g).to_string())
 
     print("MOVE (O)")
     g = ColoredDigraph(vertices=[1,2,3,4],
@@ -103,7 +103,7 @@ def main():
     print("  viable components")
     print(O_g.viable)
     print("  post graph")
-    print(O_g(O_g.viable[0]).to_string())
+    print(O_g(O_g.viable[0])(g).to_string())
 
     print("MOVE (O)^{-1}")
     print("  pre graph")
@@ -112,7 +112,7 @@ def main():
     print("  viable components")
     print(OInverse_g.viable)
     print("  post graph")
-    print(OInverse_g(OInverse_g.viable[0]).to_string())
+    print(OInverse_g(OInverse_g.viable[0])(g).to_string())
 
     print("MOVE (C)")
     g = ColoredDigraph(vertices=[1],
@@ -125,17 +125,17 @@ def main():
     print("  viable components")
     print(C_g.viable)
     print("  graph (C)")
-    print(C_g(C_g.viable[-1]).to_string())
+    print(C_g(C_g.viable[-1])(g).to_string())
     C_g = C(g)
     print("  viable components")
     print(C_g.viable)
     print("  graph (C) (C)")
-    print(C_g(C_g.viable[-1]).to_string())
+    print(C_g(C_g.viable[-1])(g).to_string())
     C_g = C(g)
     print("  viable components")
     print(C_g.viable)
     print("  graph (C) (C) (C)")
-    print(C_g(C_g.viable[-1]).to_string())
+    print(C_g(C_g.viable[-1])(g).to_string())
 
 
     print("MOVE (C)^{-1}")
@@ -145,17 +145,17 @@ def main():
     print("  viable components")
     print(CInverse_g.viable)
     print("  graph (C)^{-1}")
-    print(CInverse_g(CInverse_g.viable[0]).to_string())
+    print(CInverse_g(CInverse_g.viable[0])(g).to_string())
     CInverse_g = CInverse(g)
     print("  viable components")
     print(CInverse_g.viable)
     print("  graph (C)^{-1} (C)^{-1}")
-    print(CInverse_g(CInverse_g.viable[0]).to_string())
+    print(CInverse_g(CInverse_g.viable[0])(g).to_string())
     CInverse_g = CInverse(g)
     print("  viable components")
     print(CInverse_g.viable)
     print("  graph (C)^{-1} (C)^{-1} (C)^{-1}")
-    print(CInverse_g(CInverse_g.viable[0]).to_string())
+    print(CInverse_g(CInverse_g.viable[0])(g).to_string())
 
     print("MOVE (P)")
     g = ColoredDigraph(vertices=[1,2,3,4],
@@ -174,17 +174,17 @@ def main():
     print("  viable components")
     print(P_g.viable)
     print("  graph (P)")
-    print(P_g(P_g.viable[-1]).to_string())
+    print(P_g(P_g.viable[-1])(g).to_string())
     P_g = P(g)
     print("  viable components")
     print(P_g.viable)
     print("  graph (P) (P)")
-    print(P_g(P_g.viable[-1]).to_string())
+    print(P_g(P_g.viable[-1])(g).to_string())
     P_g = P(g)
     print("  viable components")
     print(P_g.viable)
     print("  graph (P) (P) (P)")
-    print(P_g(P_g.viable[-1]).to_string())
+    print(P_g(P_g.viable[-1])(g).to_string())
 
     print("MOVE (P)^{-1}")
     print("  pre graph")
@@ -193,17 +193,17 @@ def main():
     print("  viable components")
     print(PInverse_g.viable)
     print("  graph (P)^{-1}")
-    print(PInverse_g(PInverse_g.viable[-1]).to_string())
+    print(PInverse_g(PInverse_g.viable[-1])(g).to_string())
     PInverse_g = PInverse(g)
     print("  viable components")
     print(PInverse_g.viable)
     print("  graph (P)^{-1} (P)^{-1}")
-    print(PInverse_g(PInverse_g.viable[-1]).to_string())
+    print(PInverse_g(PInverse_g.viable[-1])(g).to_string())
     PInverse_g = PInverse(g)
     print("  viable components")
     print(PInverse_g.viable)
     print("  graph (P)^{-1} (P)^{-1} (P)^{-1}")
-    print(PInverse_g(PInverse_g.viable[-1]).to_string())
+    print(PInverse_g(PInverse_g.viable[-1])(g).to_string())
 
 if __name__ == "__main__":
     main()

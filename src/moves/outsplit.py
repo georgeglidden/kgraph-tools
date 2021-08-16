@@ -57,36 +57,38 @@ class Outsplit(K1Move):
         """
         :param component: a three-tuple containing a splittable vertex, and two
         adjacency tables which partition its incoming edge set.
-        :return: the graph formed by outsplitting at the component.
+        :return: a function which outsplits a graph at the component.
         """
-        # unpack the component
-        v, E1, E2 = component
-        # record the edges of the vertex, then delete the vertex and its edges.
-        adj_out, adj_in = self.graph.adj(v)
-        self.graph.del_vertex(v)
-        # add two new vertices
-        v1 = self.graph.add_vertex()
-        v2 = self.graph.add_vertex()
-        # add new incoming edges - duplicate old incoming edges between v1,v2.
-        for w in adj_in:
-            if (w != v):
-                self.graph.add_edge(w,v1,color=0)
-                self.graph.add_edge(w,v2,color=0)
-        # add new outgoing edges - eponymously, split the old outgoing edges.
-        for w in adj_out:
-            in_E1 = (E1[w] != 0)
-            in_E2 = (E2[w] != 0)
-            if (w == v):
-                w = (v1 if in_E1 else v2)
-                x = (v2 if in_E1 else v1)
-                self.graph.add_edge(w,x,color=0)
-            if in_E1:
-                self.graph.add_edge(v1,w,color=0)
-            elif in_E2:
-                self.graph.add_edge(v2,w,color=0)
-            else:
-                assert False, 'viability check failed: malformed partition'
-        return self.graph
+        def _outsplit(graph, component=component):
+            # unpack the component
+            v, E1, E2 = component
+            # record the edges of the vertex, then delete the vertex and its edges.
+            adj_out, adj_in = graph.adj(v)
+            graph.del_vertex(v)
+            # add two new vertices
+            v1 = graph.add_vertex()
+            v2 = graph.add_vertex()
+            # add new incoming edges - duplicate old incoming edges between v1,v2.
+            for w in adj_in:
+                if (w != v):
+                    graph.add_edge(w,v1,color=0)
+                    graph.add_edge(w,v2,color=0)
+            # add new outgoing edges - eponymously, split the old outgoing edges.
+            for w in adj_out:
+                in_E1 = (E1[w] != 0)
+                in_E2 = (E2[w] != 0)
+                if (w == v):
+                    w = (v1 if in_E1 else v2)
+                    x = (v2 if in_E1 else v1)
+                    graph.add_edge(w,x,color=0)
+                if in_E1:
+                    graph.add_edge(v1,w,color=0)
+                elif in_E2:
+                    graph.add_edge(v2,w,color=0)
+                else:
+                    assert False, 'viability check failed: malformed partition'
+            return graph
+        return _outsplit
 
 class OutsplitInverse(K1Move):
 
@@ -219,20 +221,22 @@ class OutsplitInverse(K1Move):
     def _action(self, component):
         """
         :param component: two vertices (v,w) that satisfy conditions (i)-(iii)
-        :return: a graph with outsplit inversed at v and w
+        :return: a function which inverse outsplits a graph at the component.
         """
-        w1,w2 = component
-        out_adj_1, in_adj = self.graph.adj(w1)
-        out_adj_2 = self.graph.adj(w2)[0]
-        self.graph.del_vertex(w1)
-        self.graph.del_vertex(w2)
-        w = self.graph.add_vertex()
-        for v in in_adj:
-            if ((v!=w1) and (v!=w2)):
-                self.graph.add_edge(v,w,color=0)
-            else:
-                self.graph.add_edge(w,w,color=0)
-        for v in (out_adj_1 + out_adj_2):
-            if ((v!=w1) and (v!=w2)):
-                self.graph.add_edge(w,v,color=0)
-        return self.graph
+        def _outsplitinverse(graph, component=component):
+            w1,w2 = component
+            out_adj_1, in_adj = graph.adj(w1)
+            out_adj_2 = graph.adj(w2)[0]
+            graph.del_vertex(w1)
+            graph.del_vertex(w2)
+            w = graph.add_vertex()
+            for v in in_adj:
+                if ((v!=w1) and (v!=w2)):
+                    graph.add_edge(v,w,color=0)
+                else:
+                    graph.add_edge(w,w,color=0)
+            for v in (out_adj_1 + out_adj_2):
+                if ((v!=w1) and (v!=w2)):
+                    graph.add_edge(w,v,color=0)
+            return graph
+        return _outsplitinverse

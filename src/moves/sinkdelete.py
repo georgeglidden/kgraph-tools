@@ -38,18 +38,20 @@ class SinkDelete(K1Move):
     def _action(self, component):
         """
         :param component: one or more sinks
-        :return: a graph with every vertex from `component` deleted.
+        :return: a function which sink deletes a graph at the component.
         """
-        if (type(component) == int):
-            component = [component]
-        try:
-            for v in component:
-                self.graph.del_vertex(v)
-        except TypeError as e:
-            raise e
-        except:
-            raise ValueError("received a non-vertex element in `component`.")
-        return self.graph
+        def _sinkdelete(graph, component=component):
+            if (type(component) == int):
+                component = [component]
+            try:
+                for v in component:
+                    graph.del_vertex(v)
+            except TypeError as e:
+                raise e
+            except:
+                raise ValueError("received a non-vertex element in `component`.")
+            return graph
+        return _sinkdelete
 
 class SinkDeleteInverse(K1Move):
 
@@ -67,17 +69,18 @@ class SinkDeleteInverse(K1Move):
         determines if there are any legal moves on the graph.
         :return: every vertex in the graph.
         """
-        return self.graph.vertices()
+        return [v for v in self.graph.vertices()]
 
     def _action(self, component):
         """
         :param component: one or more vertices
-        :return: a graph with a new vertex incident to all vertices in the
-        component.
+        :return: a function which inverse sink deletes a graph at the component.
         """
-        if (type(component) == int):
-            component = [component]
-        s = self.graph.add_vertex()
-        for v in component:
-            self.graph.add_edge(v,s,color=0)
-        return self.graph
+        def _sinkdeleteinverse(graph, component=component):
+            if (type(component) == int):
+                component = [component]
+            s = graph.add_vertex()
+            for v in component:
+                graph.add_edge(v,s,color=0)
+            return graph
+        return _sinkdeleteinverse

@@ -49,27 +49,26 @@ class Eclose(CuntzSplice):
     def _action(self, component):
         """
         :param component: a vertex
-        :return: a graph, formed by performing move (P) on the component vertex.
+        :return: a function which ecloses a graph at the component.
         """
-        if (type(component) == int):
+        def _eclose(graph, component=component):
             u = component
-            S = [w for w in self.graph.adj(u)[0] if (w!=u)]
+            S = [w for w in graph.adj(u)[0] if (w!=u)]
             for v in S:
                 # Cuntz Splice at every vertex of `S`
-                w1 = self.graph.add_vertex()
-                w2 = self.graph.add_vertex()
-                self.graph.add_edge(v,w1,color=0)
-                self.graph.add_edge(w1,v,color=0)
-                self.graph.add_edge(w1,w1,color=0)
-                self.graph.add_edge(w1,w2,color=0)
-                self.graph.add_edge(w2,w1,color=0)
-                self.graph.add_edge(w2,w2,color=0)
+                w1 = graph.add_vertex()
+                w2 = graph.add_vertex()
+                graph.add_edge(v,w1,color=0)
+                graph.add_edge(w1,v,color=0)
+                graph.add_edge(w1,w1,color=0)
+                graph.add_edge(w1,w2,color=0)
+                graph.add_edge(w2,w1,color=0)
+                graph.add_edge(w2,w2,color=0)
                 # eclose the cycle at `u`
-                self.graph.add_edge(w2,u,color=0)
-                self.graph.add_edge(w2,u,color=0)
-            return self.graph
-        else:
-            raise TypeError("the component vertex was not of type int")
+                graph.add_edge(w2,u,color=0)
+                graph.add_edge(w2,u,color=0)
+            return graph
+        return _eclose
 
 class EcloseInverse(CuntzSpliceInverse):
 
@@ -211,11 +210,13 @@ class EcloseInverse(CuntzSpliceInverse):
     def _action(self, component):
         """
         :param component: a vertex that has been eclosed.
-        :return: a graph, with Eclose inversed at the component vertex.
+        :return: a function which inverse ecloses a graph at the component.
         """
-        motifs = self._bins[component]
-        for m in motifs:
-            _, v1, v2, __ = m
-            self.graph.del_vertex(v1)
-            self.graph.del_vertex(v2)
-        return self.graph
+        def _ecloseinverse(graph, component=component):
+            motifs = self._bins[component]
+            for m in motifs:
+                _, v1, v2, __ = m
+                graph.del_vertex(v1)
+                graph.del_vertex(v2)
+            return graph
+        return _ecloseinverse

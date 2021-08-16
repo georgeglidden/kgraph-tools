@@ -7,13 +7,8 @@ class Move:
     def __init__(self, skeleton, in_place=False):
         """
         :param skeleton: a ColoredDigraph object.
-        :param in_place: when false, `self.graph` will not be modified.
         """
-        self.in_place = in_place
-        if self.in_place:
-            self.graph = skeleton
-        else:
-            self.graph = copy(skeleton)
+        self.graph = skeleton
         self.viable = self._check()
         self.active = (len(self.viable) > 0)
 
@@ -47,8 +42,8 @@ class Move:
         performs the move if `component` is viable, and if the object is active.
         :param component: the subgraph on which the move is performed. must be
         viable, as defined by the implementation.
-        :param viable_override:
-        :return: the graph formed by action on the component.
+        :return: a function which performs the move to a graph, according to
+        the component.
         """
         if (not self.active):
             return self.graph

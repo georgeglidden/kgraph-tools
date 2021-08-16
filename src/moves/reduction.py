@@ -43,28 +43,24 @@ class Reduction(K1Move):
     def _action(self, component):
         """
         :param component: one or more reducible vertices
-        :return: a graph with every vertex in `component` deleted, and
-        updated edges to preserve connectivity.
+        :return: a function which reduces a graph at the component.
         """
         if (type(component) == int):
             component = [component]
-        try:
+        def _reduction(graph, component=component):
             for v in component:
                 # get the relevant edges
-                adj_out, adj_in = self.graph.adj(v)
+                adj_out, adj_in = graph.adj(v)
                 # delete v and its edges
-                self.graph.del_vertex(v)
+                graph.del_vertex(v)
                 # per `reducible`, we know there is only one incoming edge.
                 w = adj_in[0]
                 # similarly, we know that `adj_out`=[x,x,...,x].
                 # create new edges from w to x, for each edge v to x.
                 for x in adj_out:
-                    self.graph.add_edge(w,x,color=0)
-        except TypeError as e:
-            raise e
-        except:
-            raise ValueError("received a non-vertex element in `component`.")
-        return self.graph
+                    graph.add_edge(w,x,color=0)
+            return graph
+        return _reduction
 
 class ReductionInverse(K1Move):
     # move (S)^{-1}
@@ -101,12 +97,14 @@ class ReductionInverse(K1Move):
     def _action(self, component):
         """
         :param component: an edge vw and its degree d.
-        :return: a graph with the edge vw replaced by the path vxw.
+        :return: a function which inveres reduces a graph at the component.
         """
-        v,w,d = component
-        self.graph.del_edge(v,w,color=0)
-        x = self.graph.add_vertex()
-        self.graph.add_edge(v,x,color=0)
-        for _ in range(d):
-            self.graph.add_edge(x,w,color=0)
-        return self.graph
+        def _reductioninverse(graph, component=component):
+            v,w,d = component
+            graph.del_edge(v,w,color=0)
+            x = graph.add_vertex()
+            graph.add_edge(v,x,color=0)
+            for _ in range(d):
+                graph.add_edge(x,w,color=0)
+            return graph
+        return _reductioninverse
