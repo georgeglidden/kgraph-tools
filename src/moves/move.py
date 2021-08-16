@@ -1,12 +1,19 @@
+from copy import copy
+
 class Move:
     """
     base class for a k-graph rewriting system
     """
-    def __init__(self, skeleton):
+    def __init__(self, skeleton, in_place=False):
         """
         :param skeleton: a ColoredDigraph object.
+        :param in_place: when false, `self.graph` will not be modified.
         """
-        self.graph = skeleton
+        self.in_place = in_place
+        if self.in_place:
+            self.graph = skeleton
+        else:
+            self.graph = copy(skeleton)
         self.viable = self._check()
         self.active = (len(self.viable) > 0)
 
@@ -35,12 +42,11 @@ class Move:
         """
         raise NotImplementedError()
 
-    def __call__(self, component, in_place=True):
+    def __call__(self, component):
         """
         performs the move if `component` is viable, and if the object is active.
         :param component: the subgraph on which the move is performed. must be
         viable, as defined by the implementation.
-        :param in_place: (to be implemented) when false, `self.graph` will not be modified.
         :param viable_override:
         :return: the graph formed by action on the component.
         """
