@@ -30,7 +30,7 @@ def from_string(graphstring):
     str1 = str.strip(graphstring)
     str2 = str.strip(skeleton.to_string())
     min_len = min(len(str1),len(str2))
-    assert (str1[:min_len] == str2[:min_len]), "explicit isomorphism"
+    assert (str1[:min_len] == str2[:min_len]), "explicit isomorphism" + str1 + '\n' + str2
     return skeleton
 
 def load_kgraph(path):
