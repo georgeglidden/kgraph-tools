@@ -86,7 +86,7 @@ class CycleIntersection:
         """
         if (restrict==None):
             restrict = lambda v: True
-        return list(set(d for d,v in self._adj[c] if (not retrict(v))))
+        return list(set(d for d,v in self._adj[c] if (not restrict(v))))
 
     def _set_vector(self, X):
         self._loaded = X

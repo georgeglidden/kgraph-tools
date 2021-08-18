@@ -69,19 +69,19 @@ class CuntzSplice(K1Move):
         :param component: one or more vertices
         :return: a function which Cuntz splices a graph at the component.
         """
-        if (type(component) == int):
-            component = [component]
+
         def _cuntzsplice(graph, component=component):
-            for v in component:
-                w1 = graph.add_vertex()
-                w2 = graph.add_vertex()
-                graph.add_edge(v,w1,color=0)
-                graph.add_edge(w1,v,color=0)
-                graph.add_edge(w1,w1,color=0)
-                graph.add_edge(w1,w2,color=0)
-                graph.add_edge(w2,w1,color=0)
-                graph.add_edge(w2,w2,color=0)
-            return graph
+            v = component
+            w1 = graph.add_vertex()
+            w2 = graph.add_vertex()
+            graph.add_edge(v,w1,color=0)
+            graph.add_edge(w1,v,color=0)
+            graph.add_edge(w1,w1,color=0)
+            graph.add_edge(w1,w2,color=0)
+            graph.add_edge(w2,w1,color=0)
+            graph.add_edge(w2,w2,color=0)
+            return graph, (v,w1,w2)
+
         return _cuntzsplice
 
 class CuntzSpliceInverse(CuntzSplice):
@@ -96,7 +96,10 @@ class CuntzSpliceInverse(CuntzSplice):
         """
         # indegree = outdegree
         if (len(out_adj_x) == len(in_adj_x) == 2):
-            i = out_adj_x.index(x)
+            if x in out_adj_x:
+                i = out_adj_x.index(x)
+            else:
+                i = -1
             # has a loop
             if ((i >= 0) and (x in in_adj_x)):
                 y = out_adj_x[i-1]
@@ -117,7 +120,10 @@ class CuntzSpliceInverse(CuntzSplice):
         """
         # indegree = outdegree
         if (len(out_adj_x) == len(in_adj_x) == 3):
-            i = out_adj_x.index(x)
+            if x in out_adj_x:
+                i = out_adj_x.index(x)
+            else:
+                i = -1
             # has a loop
             if ((i >= 0) and (x in in_adj_x)):
                 y = out_adj_x[i-1]
@@ -217,16 +223,15 @@ class CuntzSpliceInverse(CuntzSplice):
 
     def _action(self, component):
         """
-        :param component: list of (C)-motifs (w, v1, v2)
+        :param component: a (C)-motif (w, v1, v2)
         :return: a function which inverse Cuntz splices a graph at the
         component.
         """
-        if (type(component) == tuple):
-            component = [component]
+
         def _cuntzspliceinverse(graph, component=component):
-            for m in component:
-                _, v1, v2 = m
-                graph.del_vertex(v1)
-                graph.del_vertex(v2)
-            return graph
+            w, v1, v2 = component
+            graph.del_vertex(v1)
+            graph.del_vertex(v2)
+            return graph, w
+
         return _cuntzspliceinverse

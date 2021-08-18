@@ -45,10 +45,7 @@ class Move:
         :return: a function which performs the move to a graph, according to
         the component.
         """
-        if (not self.active):
-            return self.graph
+        if (self._viable(component)):
+            return self._action(component)
         else:
-            if (self._viable(component)):
-                return self._action(component)
-            else:
-                raise ValueError("received a non-viable component.")
+            raise ValueError("received a non-viable component.")

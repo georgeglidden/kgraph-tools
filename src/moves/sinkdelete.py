@@ -16,17 +16,10 @@ class SinkDelete(K1Move):
 
     def _viable(self, component):
         """
-        :param component: one or more vertices
+        :param component: a vertex
         :return: boolean, True iff every vertex in `component` is a sink.
         """
-        if (type(component) == int):
-            component = [component]
-        try:
-            return all([self.sink(v) for v in component])
-        except TypeError as e:
-            raise e
-        except:
-            raise ValueError("received a non-vertex element in `component`.")
+        return self.sink(component)
 
     def _secondary_check(self):
         """
@@ -37,20 +30,16 @@ class SinkDelete(K1Move):
 
     def _action(self, component):
         """
-        :param component: one or more sinks
+        :param component: a sink
         :return: a function which sink deletes a graph at the component.
         """
+
         def _sinkdelete(graph, component=component):
-            if (type(component) == int):
-                component = [component]
-            try:
-                for v in component:
-                    graph.del_vertex(v)
-            except TypeError as e:
-                raise e
-            except:
-                raise ValueError("received a non-vertex element in `component`.")
-            return graph
+            s = component
+            inverse_component = self.graph.adj(s)[1]
+            graph.del_vertex(s)
+            return graph, inverse_component
+
         return _sinkdelete
 
 class SinkDeleteInverse(K1Move):
@@ -76,11 +65,13 @@ class SinkDeleteInverse(K1Move):
         :param component: one or more vertices
         :return: a function which inverse sink deletes a graph at the component.
         """
+
         def _sinkdeleteinverse(graph, component=component):
             if (type(component) == int):
                 component = [component]
             s = graph.add_vertex()
             for v in component:
                 graph.add_edge(v,s,color=0)
-            return graph
+            return graph, s
+
         return _sinkdeleteinverse

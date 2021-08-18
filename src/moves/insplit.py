@@ -1,5 +1,4 @@
 from .k1move import K1Move
-from itertools import chain
 
 class Insplit(K1Move):
     # move (I)
@@ -23,10 +22,9 @@ class Insplit(K1Move):
             return False
         else:
             for w in self.graph.adj(v)[1]:
-                in_E1 = (E1[w] != 0)
-                in_E2 = (E2[w] != 0)
                 # not a partition
-                if ((in_E1 and in_E2) or (not (in_E1 or in_E2))):
+                if (((w in E1) and (w in E2)) or
+                    (not ((w in E1) or (w in E2)))):
                     return False
         return True
 
@@ -40,19 +38,15 @@ class Insplit(K1Move):
         components = []
         for v in self.graph.vertices():
             if self.splittable(v):
-                adjacency_table = dict((v,0) for v in self.graph.vertices())
-                E1, E2 = adjacency_table.copy(), adjacency_table.copy()
-                for w in self.graph.adj(v)[1]:
-                    adjacency_table[w] += 1
-                x = next(i for i in adjacency_table
-                         if (adjacency_table[i]!=0))
-                # the i!=v condition isn't strictly necessary, but since these
+                E1, E2 = set(), set()
+                x = next(w for w in self.graph.adj(v)[1] if (w != v))
+                # the w!=v condition isn't strictly necessary, but since these
                 # partitions are arbitrary anways, i want them to look nice.
                 for w in self.graph.adj(v)[1]:
                     if (w == x):
-                        E1[w] = adjacency_table[w]
+                        E1.add(w)
                     else:
-                        E2[w] = adjacency_table[w]
+                        E2.add(w)
                 components.append((v,E1,E2))
         return components
 
@@ -62,6 +56,7 @@ class Insplit(K1Move):
         adjacency tables which partition its incoming edge set.
         :return: a function which insplits a graph at the component.
         """
+
         def _insplit(graph, component=component):
             # unpack the component
             v, E1, E2 = component
@@ -78,19 +73,25 @@ class Insplit(K1Move):
                     graph.add_edge(v2,w,color=0)
             # add new incoming edges - eponymously, split the old incoming edges.
             for w in adj_in:
-                in_E1 = (E1[w] != 0)
-                in_E2 = (E2[w] != 0)
                 if (w == v):
-                    w = (v1 if in_E1 else v2)
-                    x = (v2 if in_E1 else v1)
+                    w = (v1 if (w in E1) else v2)
+                    x = (v2 if (w in E1) else v1)
                     graph.add_edge(x,w,color=0)
-                if in_E1:
-                    graph.add_edge(w,v1,color=0)
-                elif in_E2:
-                    graph.add_edge(w,v2,color=0)
+                    if (v in E1):
+                        graph.add_edge(w,v1,color=0)
+                    elif (v in E2):
+                        graph.add_edge(w,v2,color=0)
+                    else:
+                        assert False, f"{w}; {adj_in} != {E1} + {E2}"
                 else:
-                    assert False, 'viability check failed: malformed partition'
-            return graph
+                    if (w in E1):
+                        graph.add_edge(w,v1,color=0)
+                    elif (w in E2):
+                        graph.add_edge(w,v2,color=0)
+                    else:
+                        assert False, f"{w}; {adj_in} != {E1} + {E2}"
+            return graph, (v1,v2)
+
         return _insplit
 
 class InsplitInverse(K1Move):
@@ -172,7 +173,10 @@ class InsplitInverse(K1Move):
         :param component: two vertices
         :return: boolean, true when the vertices are a valid pair.
         """
+        #print("="*100)
+        #print("INSPLIT VIABILITY CHECK")
         v,w = component
+        #print(f"\tare {v} and {w} viable?")
         if (self.graph.is_vertex(v) and self.graph.is_vertex(v)):
             return (len(self.split(v,w))>0)
         else:
@@ -208,7 +212,8 @@ class InsplitInverse(K1Move):
             #print("\tcandidates", candidates)
             # find viable pairs
             pairs.update([(min(v,w),max(v,w))
-                          for w in self.split(v,candidates)])
+                          for w in self.split(v,candidates)
+                          if self._viable((min(v,w),max(v,w)))])
         #print("="*100)
         return list(pairs)
 
@@ -217,6 +222,7 @@ class InsplitInverse(K1Move):
         :param component: two vertices (v,w) that satisfy conditions (i)-(iii)
         :return: a function which inverse insplits a graph at the component.
         """
+
         def _insplitinverse(graph, component=component):
             w1,w2 = component
             out_adj, in_adj_1 = graph.adj(w1)
@@ -232,5 +238,13 @@ class InsplitInverse(K1Move):
             for v in (in_adj_1 + in_adj_2):
                 if ((v!=w1) and (v!=w2)):
                     graph.add_edge(v,w,color=0)
-            return graph
+            E1 = set(in_adj_1)
+            E2 = set(in_adj_2)
+            for E_ in [E1,E2]:
+                for w_ in [w1,w2]:
+                    if (w_ in E_):
+                        E_.remove(w_)
+                        E_.add(w)
+            return graph, (w, E1, E2)
+
         return _insplitinverse

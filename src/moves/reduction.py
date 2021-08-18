@@ -24,14 +24,7 @@ class Reduction(K1Move):
         :param component: one or more vertices
         :return: boolean, True iff every vertex in `component` is reducible.
         """
-        if (type(component) == int):
-            component = [component]
-        try:
-            return all([self.reducible(v) for v in component])
-        except TypeError as e:
-            raise e
-        except:
-            raise ValueError("received a non-vertex element in `component`.")
+        return self.reducible(component)
 
     def _secondary_check(self):
         """
@@ -42,24 +35,25 @@ class Reduction(K1Move):
 
     def _action(self, component):
         """
-        :param component: one or more reducible vertices
+        :param component: a reducible vertex
         :return: a function which reduces a graph at the component.
         """
-        if (type(component) == int):
-            component = [component]
+
         def _reduction(graph, component=component):
-            for v in component:
-                # get the relevant edges
-                adj_out, adj_in = graph.adj(v)
-                # delete v and its edges
-                graph.del_vertex(v)
-                # per `reducible`, we know there is only one incoming edge.
-                w = adj_in[0]
-                # similarly, we know that `adj_out`=[x,x,...,x].
-                # create new edges from w to x, for each edge v to x.
-                for x in adj_out:
-                    graph.add_edge(w,x,color=0)
-            return graph
+            v = component
+            # get the relevant edges
+            adj_out, adj_in = graph.adj(v)
+            # delete v and its edges
+            graph.del_vertex(v)
+            # per `reducible`, we know there is only one incoming edge.
+            w = adj_in[0]
+            # similarly, we know that `adj_out`=[x,x,...,x].
+            # create new edges from w to x, for each edge v to x.
+            for x in adj_out:
+                graph.add_edge(w,x,color=0)
+            inverse_component = (x,w,len(adj_out))
+            return graph, inverse_component
+
         return _reduction
 
 class ReductionInverse(K1Move):
@@ -99,6 +93,7 @@ class ReductionInverse(K1Move):
         :param component: an edge vw and its degree d.
         :return: a function which inveres reduces a graph at the component.
         """
+
         def _reductioninverse(graph, component=component):
             v,w,d = component
             graph.del_edge(v,w,color=0)
@@ -106,5 +101,6 @@ class ReductionInverse(K1Move):
             graph.add_edge(v,x,color=0)
             for _ in range(d):
                 graph.add_edge(x,w,color=0)
-            return graph
+            return graph, x
+        
         return _reductioninverse

@@ -1,10 +1,54 @@
-from src.kgraph import CC, ColoredDigraph
-from src.moves.insplit import Insplit as I, InsplitInverse as IInverse
-from src.moves.cuntzsplice import CuntzSplice as C, CuntzSpliceInverse as CInverse
-from src.moves.reduction import Reduction as R, ReductionInverse as RInverse
-from src.moves.sinkdelete import SinkDelete as S, SinkDeleteInverse as SInverse
-from src.moves.outsplit import Outsplit as O, OutsplitInverse as OInverse
-from src.moves.eclose import Eclose as P, EcloseInverse as PInverse
+from src.kgraph import ColoredDigraph
+from src.moves import *
+from src.io import load_kgraph
+
+from copy import deepcopy
+import sys
+
+cases = [(S, "(S)",
+          SInverse, "(S)^{-1}"),
+         (SInverse, "(S)^{-1}",
+          S, "(S)"),
+         (R, "(R)",
+          RInverse, "(R)^{-1}"),
+         (RInverse, "(R)^{-1}",
+          R, "(R)"),
+         (I, "(I)",
+          IInverse, "(I)^{-1}"),
+         (IInverse, "(I)^{-1}",
+          I, "(I)"),
+         (O, "(O)",
+          OInverse, "(O)^{-1}"),
+         (OInverse, "(O)^{-1}",
+          O, "(O)"),
+         (C, "(C)",
+          CInverse, "(C)^{-1}"),
+         (CInverse, "(C)^{-1}",
+          C, "(C)"),
+         (P, "(P)",
+          PInverse, "(P)^{-1}"),
+         (PInverse, "(P)^{-1}",
+          P, "(P)")]
+
+print("="*100)
+print("moves/ module unit test\n")
+g = load_kgraph(sys.argv[1])
+for template, token, inverse_template, inverse_token in cases:
+    print("move", token)
+    print(f"initial graph:\n{g.to_string()}")
+    move = template(g)
+    viable_components = move.viable
+    for c in viable_components:
+        operator = move(c)
+        m_g, inverse_c = operator(deepcopy(g))
+        print(f"{token} at {c}:\n{m_g.to_string()}")
+        print("inverse token:", inverse_c)
+        inverse_move = inverse_template(m_g)
+        inverse_operator = inverse_move(inverse_c)
+        id_g, id_c = inverse_operator(m_g)
+        print(f"{inverse_token} at {inverse_c}, {c} -> {id_c}:\n{id_g.to_string()}")
+
+"""
 def main():
     print("moves/ module unit test\n")
 
@@ -207,3 +251,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+"""

@@ -67,7 +67,7 @@ class Eclose(CuntzSplice):
                 # eclose the cycle at `u`
                 graph.add_edge(w2,u,color=0)
                 graph.add_edge(w2,u,color=0)
-            return graph
+            return graph, u
         return _eclose
 
 class EcloseInverse(CuntzSpliceInverse):
@@ -101,7 +101,10 @@ class EcloseInverse(CuntzSpliceInverse):
         """
         # indegree = outdegree
         if ((len(out_adj_x) == 4) and (len(in_adj_x) == 2)):
-            i = out_adj_x.index(x)
+            if x in out_adj_x:
+                i = out_adj_x.index(x)
+            else:
+                i = -1
             # has a loop
             if ((i >= 0) and (x in in_adj_x)):
                 z1 = out_adj_x[i-1]
@@ -215,8 +218,9 @@ class EcloseInverse(CuntzSpliceInverse):
         def _ecloseinverse(graph, component=component):
             motifs = self._bins[component]
             for m in motifs:
-                _, v1, v2, __ = m
+                _, v1, v2, u = m
+                assert u == component, "it fucking better"
                 graph.del_vertex(v1)
                 graph.del_vertex(v2)
-            return graph
+            return graph, u
         return _ecloseinverse
