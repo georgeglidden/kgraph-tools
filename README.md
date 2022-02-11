@@ -23,3 +23,6 @@ automated theorem checking for ME of a set of graphs
 ### Attribution
 ------------------
 https://github.com/qpwo/python-simple-cycles
+
+Wilfried Imrich and Iztok Peterin. Recognizing cartesian products in linear
+time. Discrete Mathematics, 307:472–483, 02 2007.
